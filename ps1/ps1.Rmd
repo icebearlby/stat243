@@ -1,0 +1,153 @@
+---
+title: "Problem Set 1 "
+author: "Baoyue Liang"
+date: "2018/8/31"
+output: pdf_document
+
+---
+\section*{Problem 3}
+\subsection*{(a)}
+
+Step1: Fetch the temperature data from 2014 to 2018, unzip the zip file
+```{bash fetch data, eval = FALSE}
+cd /Users/lby/Desktop/ps1
+for((i=2014; i<=2018; i++)); do
+curl -O https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/${i}.csv.gz
+gunzip ${i}.csv.gz 
+done;
+```
+
+Step2: Count the lines in each csv file, output as observations
+```{bash}
+cd /Users/lby/Desktop/ps1
+for ((i=2014; i<=2018; i++)); do
+echo "year ${i} has $(wc -l ${i}.csv | cut -d' ' -f2) observations"
+done
+```
+
+\subsection*{(b)}
+Step1: Download the ghcnd-stations.txt file and find "DEATH" in the file to get unique code of Death Valley.
+Step2: Find each line that contains the unique code of Death valley, 201X03(which means that the date is in March), and TMAX(which means that temprature is the maximum temprature).
+```{bash}
+cd /Users/lby/Desktop/ps1
+curl -o ghcnd-stations.txt https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt
+code=$(grep DEATH ghcnd-stations.txt | cut -d' ' -f1)
+
+
+for((i=2014;i<=2018;i++));do
+grep "${code}" ${i}.csv | grep "${i}03" | grep "TMAX" | cut -d',' -f2-4 >> TMAX.txt
+done
+
+wc -l TMAX.txt
+```
+
+\subsection*{(c)}
+```{r barplot}
+setwd("/Users/lby/Desktop/ps1")
+TMAX = read.table("TMAX.txt", header = FALSE, sep = ",")
+TMAX = TMAX[,-2]
+colnames(TMAX) = c("Date","Temprature") 
+TMAX$Day = TMAX$Date %% 100
+boxplot(TMAX$Temprature ~ TMAX$Day, xlab = "Date", ylab = "Maximum Temprature")
+title("Maximum temperature in March at Death Valley")
+```
+
+\subsection*{(d)}
+```{bash}
+cd /Users/lby/Desktop/ps1
+
+function get_weather(){
+
+  location=$1
+  wea_var=$2
+  month=$3
+  year1=$4
+  year2=$5
+
+  if [ "$(echo $1)" == "-h" ] || [ $# != 5 ]; then
+  echo "usage: get_weather location weather_type month(double digit) year_to_start year_to_end"
+  return
+  fi
+  
+  if [[ "$year1" -lt "2014" || "$year2" -gt "2018" ]]; then
+  echo "No data available. Easy on me."
+  return
+  fi
+  
+  if [ "${year1}" -gt "${year2}" ]; then
+  echo -e "Please verify the year you choose. \nCurrently, we do not offer the service to travel back in time."
+  return
+  fi
+  
+  mon=$(echo $month | wc -c)
+  if [[ "$month" -gt "12" || "$mon" -ne "3" ]]; then
+  echo -e "Please input a ligit double degit month from 01 to 12. \nThanks for your cooperation."
+  return
+  fi
+  
+  curl -o ghcnd-stations.txt https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt
+  
+  code=$(grep -i "${location}" ghcnd-stations.txt | cut -d' ' -f1)
+  
+  if [ ! $code ]; then
+  echo -e "Unavailable weather station. \nWould you like to check your spelling?"
+  return
+  fi
+  
+  if  [ "$(echo $code | wc -w)" -gt "1" ]; then
+  echo -e "Please specify the location. \nJust a kind reminder, the law states that it is illegal to marry multiple brides/bridegrooms \neven at different places."
+  return
+  fi
+
+  for ((i=$year1;i<=$year2;i++)) ;do
+  curl -O https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/${i}.csv.gz
+  gunzip ${i}.csv.gz 
+  grep $code ${i}.csv | grep ${i}${month} | grep -i ${wea_var} | cut -d',' -f2-4 >> data.txt
+  rm ${i}.csv
+  done
+  rm ghcnd-stations.txt
+  echo "Saved to data.txt, finally, please enjoy the preview"
+  head data.txt
+}
+
+##Test function
+
+get_weather -h
+echo -e "\n\n"
+get_weather a b c d e f g h
+echo -e "\n\n"
+get_weather "DEATH VALLEY" TMAX 06 2016 2019
+echo -e "\n\n"
+get_weather "DEATH VALLEY" TMAX 06 2018 2017
+echo -e "\n\n"
+get_weather "DEATH VALLEY" TMAX 6 2017 2018
+echo -e "\n\n"
+get_weather "APPLE" TMAX 06 2016 2017 
+echo -e "\n\n"
+get_weather "ASDFG" TMAX 06 2016 2017 
+echo -e "\n\n"
+get_weather "DEATH VALLEY" TMAX 06 2016 2017 
+
+```
+
+\section*{Problem 4}
+First, we should get the url and select all the file name of the txt files. 
+Then, we append the txt file name after the address to download the file and echo the name of the file.
+```{bash}
+cd /Users/lby/Desktop/ps1
+curl 'https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/'| grep -o -E '"\S*.txt"' > name.txt
+
+for URL in `cat name.txt`; do 
+curl -O https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/${URL}; 
+echo "${URL}"; 
+done;
+```
+
+\section*{Problem 5}
+\subsection{(b)}
+```{r}
+library(reticulate)
+x = c(1,2,3)
+r_to_py(x, convert = FALSE)
+
+```
