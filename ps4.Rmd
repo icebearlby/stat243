@@ -57,6 +57,7 @@ system.time(
   for(i in seq_len(n))
     smp[i] <- sample(p, 1, prob = probs[i, ])
 )
+
 ```
 
 ```{r}
@@ -73,6 +74,29 @@ system.time({
   smp <- rowSums(idx)
 })
 ```
+
+```{r}
+function1 <- function(probs){
+  for(i in seq_len(n))
+    smp[i] <- sample(p, 1, prob = probs[i, ])
+}
+
+function2 <- function(probs){
+    for(i in 2:5){ 
+    probs[,i] = probs[,i-1] + probs[,i]
+    }
+    u <- runif(n)
+    idx <- (u <= probs)
+    smp <- rowSums(idx)
+}
+
+library(rbenchmark)
+benchmark(function1(probs),function2(probs),replications = 100,
+          columns = c("test", "replications", "elapsed",
+                      "relative", "user.self", "sys.self"))
+
+```
+
 What we are doing here is that we are using a cdf matrix, and a uniform random vector to decide which interval the each element of the vector falls into. 
 
 #Problem 3
