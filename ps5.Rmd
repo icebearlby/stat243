@@ -1,0 +1,64 @@
+---
+title: "ps5"
+author: "Baoyue Liang"
+date: "10/13/2018"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+  html_document: default
+---
+
+# Problem 1
+Suppose that λ1,…,λn are the eigenvalues of A. Then the $\lambda$s are also the roots of the characteristic polynomial, i.e.
+
+$$det(A-\lambda I) = p(\lambda)
+= (−1)^n(\lambda - \lambda_1)(\lambda - \lambda_2)...(\lambda - \lambda_n)
+= (\lambda_1- \lambda)(\lambda_2 - \lambda)...(\lambda_n - \lambda)$$
+
+
+The first equality follows from the factorization of a polynomial given its roots; the leading (highest degree) coefficient $(−1)^n$ can be obtained by expanding the determinant along the diagonal.
+
+Now, by setting $\lambda$ to zero (simply because it is a variable) we get on the left side det(A), and on the right side $\lambda_1\lambda_2...\lambda_n$ that is, we indeed obtain the desired result.
+
+$$det(A)=\lambda_1\lambda_2...\lambda_n$$
+
+So the determinant of the matrix is equal to the product of its eigenvalues.
+
+# Problem 2
+When z is large, $exp(z)$ can be large(with more than 16 digits) and $1 + exp(z)$ is rounded into the nearest possible value to $exp(z)$ and is thus is not accurate. 
+
+We could rearrange the function as follow to make it numerically stable.
+
+$$expit(z)  = \frac{1}{1 + exp(-z)}$$
+
+# Problem 3
+```{r}
+set.seed(1)
+z <- rnorm(10, 0, 1)
+x <- z + 1e12
+formatC(var(z), 20, format = 'f')
+formatC(var(x), 20, format = 'f')
+
+```
+```{r}
+dg <- function(x, digits = 20) formatC(x, digits, format = 'f')
+dg(z[2])
+dg(x[2])
+```
+
+For x, since before the dot there is already 12-13 digits, only 3-4 digits after the dot is accurate. However, z has 16 digits of percision. When calculatin the variance, z has 16 digits percision, while X only has 3-4 figits percision. Thay explains why the two variance agree to only 5 digits.
+
+# Problem 4
+##(a)
+If we divide into n individual column-wise computations, there are so many tasks and each one takes little time,the communication overhead of starting and stopping the tasks will reduce efficiency. Therefore it is better to divided the matrix into p blocks to improve efficiency.
+
+##(b)
+Approcah 2 is better at minimizing memory use, because at any time, for Approach 2, each core is calculating only the product of between a $1*n$ vector and a $n*1$ vector; for Appraoch 1, each core is calculating the product of a $n*n$ matrix and a $n*1$ vector.
+
+
+Appraoch 1 is better at minimizing communication,  because there are $p^2$ tasks iterate among p cores in Approah 2 and only p tasks in Approach 1. Therfore, Approach 1 has less communicaiton time.
+
+
+```{r}
+
+```
