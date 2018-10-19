@@ -53,12 +53,20 @@ For x, since before the dot there is already 12-13 digits, only 3-4 digits after
 If we divide into n individual column-wise computations, there are so many tasks and each one takes little time,the communication overhead of starting and stopping the tasks will reduce efficiency. Therefore it is better to divided the matrix into p blocks to improve efficiency.
 
 ##(b)
-Approcah 2 is better at minimizing memory use, because at any time, for Approach 2, each core is calculating only the product of between a $1*n$ vector and a $n*1$ vector; for Appraoch 1, each core is calculating the product of a $n*n$ matrix and a $n*1$ vector.
+Reference: I asked Chenxing Wu for her opinion on this quesion since I need clarification on the assuptions of this problem.
+
+Assume each element in X, Y takes up 8 bytes.
 
 
-Appraoch 1 is better at minimizing communication,  because there are $p^2$ tasks iterate among p cores in Approah 2 and only p tasks in Approach 1. Therfore, Approach 1 has less communicaiton time.
+(1)Approach 2 is better at minimizing memory use.
 
+Approach 1: There are p copies of X and p blocks of Y which takes up $8(pn^2+n^2)$ bytes.And the result takes $8n^2$ bytes. So the momory used should be $8n^2(p+2)$ bytes.
 
-```{r}
+Approach 2: There are p copies of one block of X and p blocks of Y at any single moment which takes up $16n^2$. And the result in a single moment takes up $8n^2/p$ bytes. So the memeory used shoud be $8n^2(2+\frac{1}{p})$ bytes.
 
-```
+ 
+(2) Approach 1 is better at minimizing communication.
+
+Approach 1: We need to transfer X p times, each of the p blocks of Y once and the result. Totally, the communication cost should be $n^2(p+2)$.
+
+Approach 2: we need to transfer each of the p blocks of X p times and each of the p blocks of Y p times and the result. Totally, the communication cost should bt $n^2(2p+1)$
