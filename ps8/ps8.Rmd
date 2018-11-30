@@ -1,0 +1,180 @@
+---
+title: "ps8"
+author: "Baoyue Liang"
+date: "11/27/2018"
+output: pdf_document
+---
+# Problem 1
+## (a)
+```{r}
+set.seed(1)
+m <- 5000
+sample <- rt(m, df = 3)
+sample <- sample-4
+
+# convert the samples values greater than -4
+sample[sample>-4] <- -8-sample[sample>-4]
+
+# estimate the mean
+f <- dt(sample,3)/pt(-4,3)
+g <- 2*dt(sample+4, df = 3)
+E <- 1/m*sum(sample*f/g)
+
+# create histograms of the weights
+hist(f/g, breaks = 100, xlim = c(0,1.5))
+
+# estimate the variance
+var <- var(sample*f/g)/m
+
+# report the estimates of mean and variance
+E
+var
+
+```
+
+## (b)
+```{r}
+set.seed(1)
+m <- 5000
+sample <- rt(m, df = 1)
+sample <- sample-4
+
+# convert the samples values greater than -4
+sample[sample>-4] <- -8-sample[sample>-4]
+
+# estimate the mean
+f <- dt(sample,3)/pt(-4,3)
+g <- 2*dt(sample+4, df = 1)
+E <- 1/m*sum(sample*f/g)
+
+# create histograms of the weights
+hist(f/g, breaks = 100, xlim = c(0,1.5))
+
+# estimate the variance
+var <- var(sample*f/g)/m
+
+# report the estimates of mean and variance
+E
+var
+```
+
+# Problem 2
+
+```{r}
+library(fields)
+
+theta <- function(x1,x2) atan2(x2, x1)/(2*pi)
+
+f <- function(x) {
+  f1 <- 10*(x[3] - 10*theta(x[1],x[2]))
+  f2 <- 10*(sqrt(x[1]^2 + x[2]^2) - 1)
+  f3 <- x[3]
+  return(f1^2 + f2^2 + f3^2)
+}
+
+## provide data
+m <- 100
+x1 <- x2 <-  seq(-5, 5, len = m)
+x3 <- seq(-5, 5, length.out = 9)
+xs <- as.matrix(expand.grid(x1, x2))
+
+## apply function and plot slice
+par(mfrow = c(3,3), mai = c(0.3,0.3,0.3,0.3))
+for(i in x3){
+  new = cbind(xs ,i)
+  fx = apply(new, 1, f)
+  title = paste('x3 = ', i)
+  image(x1, x2, matrix(log(fx),length(x1),length(x1)),xlab = "x1",ylab = "x2",main = title)
+}
+
+```
+
+```{r}
+set.seed(0)
+start = runif(3,-5,5)
+optim(start,f)
+```
+
+
+```{r}
+set.seed(0)
+start = runif(3,-5,5)
+optim(start,f)
+```
+
+```{r}
+set.seed(0)
+start = runif(3,-5,5)
+nlm(f,start)
+```
+
+```{r}
+set.seed(0)
+start = runif(3,-5,5)
+nlm(f,start)
+```
+
+
+# Problem 3
+
+Question (a) and (b) are attached behind (c) and (d) and are written by hand
+
+## (c)
+```{r}
+library(Rlab)
+set.seed(2)
+n = 100
+
+## generate X
+x1  = matrix(runif(n*3),n,3)
+x0  = as.matrix(rep(1,n))
+X = cbind(x1,x0)
+
+## initialize beta
+beta <- matrix(c(0.5,0.8,0,0))
+
+## get pi and Y
+P = pnorm(X %*% beta)
+set.seed(1)
+Y = rbern(n,P)
+
+## glm test
+Xdf = cbind.data.frame(X,Y)
+names(Xdf) = c("intercept","X1","X2","X3","Y")
+result = glm(Y ~ X1 + X2 + X3, family = binomial(link = "probit"),Xdf)
+summary(result)
+
+## beta starting point
+b0 = qnorm(mean(Y))
+beta_sp = matrix(c(b0,0,0,0))
+
+## EM algorithm
+EM <- function(beta,X,Y,eps,max_iteration){
+  mu = X %*% beta
+  i = 0
+  converge = FALSE
+  while((!converge) & (i <max_iteration)){
+    beta0 = beta
+    z_updated = solve(t(X) %*% X) %*% z_updated
+    converge = max(abs(beta-beta0)) <= eps
+    mu = X %*% beta
+    i = i + 1
+  }
+  return(list(beta = t(beta),iteration=i,epsilon = max(abs(beta-beta0)), convergence = converge))
+}
+```
+
+
+
+## (d)
+```{r}
+MLE <- function(beta, X, Y){
+  mu = X %*% beta
+  ll = -sum(Y * pnorm(mu,log.p = T) + (1 - Y) * pnorm(-mu, log.p = T))
+  return(ll)
+}
+
+MLE_result = optim(beta, MLE, X = X, Y = Y, method = "BFGS" )
+MLE_result
+```
+
